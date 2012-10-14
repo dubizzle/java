@@ -20,6 +20,7 @@
 actions :install, :remove
 
 attribute :url, :regex => /^http:\/\/.*(tar.gz|bin|zip)$/, :default => nil
+attribute :file_cache_path, :kind_of => String, :default => nil
 attribute :mirrorlist, :kind_of => Array, :default => nil
 attribute :checksum, :regex => /^[a-zA-Z0-9]{64}$/, :default => nil
 attribute :app_home, :kind_of => String, :default => nil

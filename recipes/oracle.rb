@@ -53,9 +53,15 @@ file "/etc/profile.d/jdk.sh" do
   mode 0755
 end
 
+if not node[:vagrant_config_file_cache_path]
+  file_cache_path = Chef::Config[:file_cache_path]
+else
+  file_cache_path = node[:vagrant_config_file_cache_path]
+end
 
 java_ark "jdk" do
   url tarball_url
+  file_cache_path file_cache_path
   checksum tarball_checksum
   app_home java_home
   bin_cmds ["java", "jar"]

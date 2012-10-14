@@ -48,7 +48,8 @@ def oracle_downloaded?(download_path, new_resource)
 end
 
 def download_direct_from_oracle(tarball_name, new_resource)
-  download_path = "#{Chef::Config[:file_cache_path]}/#{tarball_name}"
+  file_cache_path = new_resource.file_cache_path
+  download_path = "#{file_cache_path}/#{tarball_name}"
   jdk_id = new_resource.url.scan(/\/([6789]u[0-9][0-9]?-b[0-9][0-9])\//)[0][0]
   cookie = "oraclelicensejdk-#{jdk_id}-oth-JPR=accept-securebackup-cookie;gpw_e24=http://edelivery.oracle.com"
   if node['java']['oracle']['accept_oracle_download_terms']
@@ -72,6 +73,7 @@ action :install do
   app_dir_name, tarball_name = parse_app_dir_name(new_resource.url)
   app_root = new_resource.app_home.split('/')[0..-2].join('/')
   app_dir = app_root + '/' + app_dir_name
+  file_cache_path = new_resource.file_cache_path
 
   unless new_resource.default
     Chef::Log.debug("processing alternate jdk")
@@ -91,7 +93,7 @@ action :install do
     end
 
     if new_resource.url =~ /^http:\/\/download.oracle.com.*$/
-      download_path = "#{Chef::Config[:file_cache_path]}/#{tarball_name}"
+      download_path = "#{file_cache_path}/#{tarball_name}"
       if  oracle_downloaded?(download_path, new_resource)
         Chef::Log.debug("oracle tarball already downloaded, not downloading again")
       else
@@ -99,7 +101,7 @@ action :install do
       end
     else
       Chef::Log.debug("downloading tarball from an unofficial repository")
-      r = remote_file "#{Chef::Config[:file_cache_path]}/#{tarball_name}" do
+      r = remote_file "#{file_cache_path}/#{tarball_name}" do
         source new_resource.url
         checksum new_resource.checksum
         mode 0755
@@ -115,7 +117,7 @@ action :install do
     when /^.*\.bin/
       cmd = Chef::ShellOut.new(
                                %Q[ cd "#{tmpdir}";
-                                   cp "#{Chef::Config[:file_cache_path]}/#{tarball_name}" . ;
+                                   cp "#{file_cache_path}/#{tarball_name}" . ;
                                    bash ./#{tarball_name} -noregister
                                  ] ).run_command
       unless cmd.exitstatus == 0
@@ -123,14 +125,14 @@ action :install do
       end
     when /^.*\.zip/
       cmd = Chef::ShellOut.new(
-                         %Q[ unzip "#{Chef::Config[:file_cache_path]}/#{tarball_name}" -d "#{tmpdir}" ]
+                         %Q[ unzip "#{file_cache_path}/#{tarball_name}" -d "#{tmpdir}" ]
                                ).run_command
       unless cmd.exitstatus == 0
         Chef::Application.fatal!("Failed to extract file #{tarball_name}!")
       end
     when /^.*\.tar.gz/
       cmd = Chef::ShellOut.new(
-                         %Q[ tar xvzf "#{Chef::Config[:file_cache_path]}/#{tarball_name}" -C "#{tmpdir}" ]
+                         %Q[ tar xvzf "#{file_cache_path}/#{tarball_name}" -C "#{tmpdir}" ]
                                ).run_command
       unless cmd.exitstatus == 0
         Chef::Application.fatal!("Failed to extract file #{tarball_name}!")
